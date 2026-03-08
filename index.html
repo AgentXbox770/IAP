@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Internet Admin Panel</title>
+<style>
+@font-face{
+    font-family: retro;
+    src: url("retro.ttf");
+}
+body{
+    background:black;
+    color:grey;
+    font-family:retro, monospace;
+    margin:0;
+}
+#terminal{
+    padding:20px;
+    white-space:pre-line;
+    overflow-y:auto;
+    height:100vh;
+}
+input{
+    background:black;
+    border:none;
+    color:grey;
+    font-family:retro, monospace;
+    outline:none;
+    font-size:16px;
+}
+.cursor {
+    display:inline-block;
+    width:10px;
+    animation: blink 1s steps(2, start) infinite;
+}
+@keyframes blink {
+    0%,50%,100% {opacity:1;}
+    25%,75% {opacity:0;}
+}
+</style>
+</head>
+<body>
+<div id="terminal"></div>
+<script>
+const term = document.getElementById("terminal");
+let commandInput;
+let wrongAttempts = 0;
+
+function print(text=""){
+    term.innerHTML += text + "\n";
+    term.scrollTop = term.scrollHeight;
+}
+
+// Input creation for mobile/desktop
+function createInput(callback, isPassword=false){
+    commandInput=document.createElement("input");
+    commandInput.type = isPassword ? "password" : "text";
+    term.appendChild(commandInput);
+    commandInput.focus();
+
+    // blinking cursor
+    const cursor = document.createElement("span");
+    cursor.className="cursor";
+    cursor.innerText="_";
+    term.appendChild(cursor);
+
+    commandInput.addEventListener("keydown", e=>{
+        if(e.key==="Enter"){
+            let val = commandInput.value.trim();
+            commandInput.remove();
+            cursor.remove();
+            callback(val);
+        }
+    });
+}
+
+// Random generators
+function randomPort(){ return Math.floor(Math.random()*50000+10000); }
+function fakeIP(){ return `${r()}.${r()}.${r()}.${r()}`; }
+function r(){ return Math.floor(Math.random()*255); }
+
+// Login with lockout
+function login(){
+    setTimeout(()=>{
+        print("INTERNET ADMIN PANEL");
+        print("Please enter password:");
+        createInput((v)=>{
+            if(v==="2006"){
+                wrongAttempts = 0;
+                setTimeout(menu,3000);
+            } else {
+                wrongAttempts++;
+                print("Incorrect password");
+                if(wrongAttempts>=3){
+                    print("Too many incorrect passwords");
+                    print("Terminal locked for 10 seconds...");
+                    setTimeout(()=>{
+                        print("System unlocked");
+                        login();
+                    },10000);
+                } else login();
+            }
+        }, true);
+    },2000);
+}
+
+// Main menu
+function menu(){
+    print("");
+    print("Welcome to Internet Admin Panel");
+    print("[1] End Python server");
+    print("[2] End tunnel");
+    print("[3] Access Camera");
+    print("[4] Exit");
+    print("[5] Scan Internet");
+    waitCommand();
+}
+
+// Wait for command
+function waitCommand(){
+    print("> ");
+    createInput((cmd)=>{
+        if(cmd==="1") endPython();
+        else if(cmd==="2") endTunnel();
+        else if(cmd==="3") accessCam();
+        else if(cmd==="4") {term.innerHTML=""; login();}
+        else if(cmd==="5") scanInternet();
+        else {print("Unknown command"); waitCommand();}
+    });
+}
+
+// Commands
+function endPython(){
+    const port=randomPort();
+    function loop(){ print("Ending localhost:"+port); setTimeout(loop,1000);}
+    loop();
+}
+
+function endTunnel(){
+    print("Ending Tunnel...");
+    setTimeout(()=>{ print("Ending Tunnel failed"); waitCommand();},5000);
+}
+
+function accessCam(){
+    const ip=fakeIP();
+    print("Accessing "+ip+"'s camera...");
+    setTimeout(()=>{
+        print("Traceback (most recent call last):");
+        print("  File \"cam_connect.py\", line 42, in connect_stream");
+        print("ConnectionError: camera stream timeout");
+        print("JS: stream.attach() failed");
+        print("Error: device not responding");
+        waitCommand();
+    },5000);
+}
+
+function scanInternet(){
+    print("Scanning Internet...");
+    let steps = [
+        "Connecting to global nodes...",
+        "Routing packets...",
+        "Scanning public IP range..."
+    ];
+    let devices=[];
+    for(let i=0;i<4;i++) devices.push("Device detected: "+fakeIP());
+    let allLines = steps.concat(devices);
+    let index=0;
+    function showNext(){
+        if(index<allLines.length){
+            print(allLines[index]);
+            index++;
+            setTimeout(showNext,500);
+        } else {
+            print("Scan complete");
+            print(allLines.slice(steps.length).length+" devices detected");
+            waitCommand();
+        }
+    }
+    showNext();
+}
+
+login();
+</script>
+</body>
+</html>
